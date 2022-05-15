@@ -38,6 +38,13 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/booking',async(req, res)=>{
+            const patient = req.query.patient;
+            const query={patient:patient};
+            const bookings = await bookingCollection.find(query).toArray();
+            res.send(bookings);
+        })
+
         app.get('/available', async (req, res) => {
             const date = req.query.date || 'May 15, 2022';
             // step-01: GET ALL SERVICES 
@@ -55,7 +62,8 @@ async function run() {
                 const booked = serviceBooking.map(s => s.slot);
                 // service.booked = booked; // for checking ;
                 const available = service.slots.filter(s => !booked.includes(s));
-                service.available = available;
+                // service.available = available;
+                service.slots = available;
 
             })
             res.send(services);
