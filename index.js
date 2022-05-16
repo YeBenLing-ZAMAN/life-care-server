@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 const app = express();
@@ -21,6 +22,7 @@ async function run() {
         await client.connect();
         const serviceCollection = client.db('doctor_bhai').collection('services');
         const bookingCollection = client.db('doctor_bhai').collection('booking');
+        const usersCollection = client.db('doctor_bhai').collection('users');
 
         /***
          * API Naming Convestion
@@ -28,6 +30,7 @@ async function run() {
          * app.get('/booking/:id')// get a specific booking 
          * app.post('/booking') // add a new booking
          * app.patch('/booking/:id') //one item update on your DB
+         * app.put('/booking/:id') //upsert ==> update (if exists) or insert(if don't exits) // we are not sure data have or not
          * app.delete('/booking/:id') //one item delete on your DB
          */
 
@@ -38,9 +41,9 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/booking',async(req, res)=>{
+        app.get('/booking', async (req, res) => {
             const patient = req.query.patient;
-            const query={patient:patient};
+            const query = { patient: patient };
             const bookings = await bookingCollection.find(query).toArray();
             res.send(bookings);
         })
@@ -80,6 +83,20 @@ async function run() {
             }
             const result = await bookingCollection.insertOne(booking);
             return res.send({ success: true, result });
+        })
+
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            // ekta inforation thake user body te 
+            const user = req.body;
+
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
         })
 
 
