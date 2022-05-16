@@ -39,6 +39,7 @@ async function run() {
         const serviceCollection = client.db('doctor_bhai').collection('services');
         const bookingCollection = client.db('doctor_bhai').collection('booking');
         const usersCollection = client.db('doctor_bhai').collection('users');
+        const doctorCollection = client.db('doctor_bhai').collection('doctors');
 
         /***
          * API Naming Convestion
@@ -52,7 +53,7 @@ async function run() {
 
         app.get('/service', async (req, res) => {
             const query = {};
-            const cursor = await serviceCollection.find(query);
+            const cursor = await serviceCollection.find(query).project({name:1});
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -149,6 +150,14 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
             res.send({ result, token });
+        })
+
+
+        /* doctor route */
+        app.post('/doctor',verifyJWT, async(req, res)=>{
+            const doctor = req.body;
+            const result = await doctorCollection.insertOne(doctor);
+            res.send(result);
         })
 
 
