@@ -41,6 +41,17 @@ async function run() {
         const usersCollection = client.db('doctor_bhai').collection('users');
         const doctorCollection = client.db('doctor_bhai').collection('doctors');
 
+
+        const verifyAdmin = async (req, res, next) => {
+            const adminRequester = req.decoded.email;
+            const adminRequesterAccount = await usersCollection.findOne({ email: adminRequester })
+            if (adminRequesterAccount.role === 'admin') {
+                next();
+            } else {
+                res.status(403).send({ message: 'forbidden' });
+            }
+        }
+
         /***
          * API Naming Convestion
          * app.get('/booking') // get all bookings in this collection. get one more than by any filter
@@ -53,7 +64,7 @@ async function run() {
 
         app.get('/service', async (req, res) => {
             const query = {};
-            const cursor = await serviceCollection.find(query).project({name:1});
+            const cursor = await serviceCollection.find(query).project({ name: 1 });
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -101,27 +112,22 @@ async function run() {
             res.send(users);
         })
 
-        app.get('/admin/:email', async(req, res)=>{
+        app.get('/admin/:email', async (req, res) => {
             const email = req.params.email;
-            const user = await usersCollection.findOne({email:email});
+            const user = await usersCollection.findOne({ email: email });
             const isAdmin = user.role === 'admin';
-            res.send({admin:isAdmin});
+            res.send({ admin: isAdmin });
         })
 
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.put('/user/admin/:email', verifyJWT,verifyAdmin, async (req, res) => {
             const email = req.params.email;
-            const adminRequester = req.decoded.email;
-            const adminRequesterAccount = await usersCollection.findOne({ email: adminRequester })
-            if(adminRequesterAccount.role==='admin'){
-                const filter = { email: email };
-                const updateDoc = {
-                    $set: { role: 'admin' },
-                };
-                const result = await usersCollection.updateOne(filter, updateDoc);
-                res.send(result);
-            }else{
-                res.status(403).send({message: 'forbidden'});
-            }
+
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.send(result);
         })
 
 
@@ -154,7 +160,7 @@ async function run() {
 
 
         /* doctor route */
-        app.post('/doctor',verifyJWT, async(req, res)=>{
+        app.post('/doctor', verifyJWT, async (req, res) => {
             const doctor = req.body;
             const result = await doctorCollection.insertOne(doctor);
             res.send(result);
