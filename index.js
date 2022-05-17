@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const SibApiV3Sdk = require("sib-api-v3-sdk");
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -31,6 +33,35 @@ function verifyJWT(req, res, next) {
         req.decoded = decoded;
         next();
     });
+}
+let apikey = process.env.EMAIL_SENDER_KEY
+// Configure API key authorization: api-key
+var apiKey = defaultClient.authentications["api-key"];
+apiKey.apiKey = apikey;
+
+function SendTestEmail(booking) {
+    const { patient, patientName, treatment, data, slot } = booking;
+    var apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+    var sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); // SendSmtpEmail | Values to send a transactional email
+    sendSmtpEmail = {
+        sender: { email: process.env.SENDER_EMAIL },
+        to: [
+            {
+                email: patient,
+                name: patientName,
+            },
+        ],
+        subject: `Your Appointment for ${treatment} is on ${data} at ${slot} is confirmed`,
+        textContent: `Your Appointment for ${treatment} is on ${data} at ${slot} is confirmed`,
+    };
+    apiInstance.sendTransacEmail(sendSmtpEmail).then(
+        function (data) {
+            console.log("API called successfully. Returned data: " + data);
+        },
+        function (error) {
+            console.error(error);
+        }
+    );
 }
 
 async function run() {
@@ -140,6 +171,7 @@ async function run() {
                 return res.send({ success: false, booking: exists })
             }
             const result = await bookingCollection.insertOne(booking);
+            // SendTestEmail(booking);
             return res.send({ success: true, result });
         })
 
