@@ -1,10 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+require('dotenv').config();
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const SibApiV3Sdk = require("sib-api-v3-sdk");
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
-require('dotenv').config();
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -92,7 +94,20 @@ async function run() {
          * app.put('/booking/:id') //upsert ==> update (if exists) or insert(if don't exits) // we are not sure data have or not
          * app.delete('/booking/:id') //one item delete on your DB
          */
-
+        app.post("/create-payment-intent", async (req, res) => {
+            const service  = req.body;
+            const price = service.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount : amount,
+                currency:'usd',
+                payment_method_types:['card']
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        })
+        
         app.get('/service', async (req, res) => {
             const query = {};
             const cursor = await serviceCollection.find(query).project({ name: 1 });
@@ -112,6 +127,12 @@ async function run() {
             } else {
                 return res.status(403).send({ message: 'forbidden access' });
             }
+        })
+        app.get('/booking/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const booking = await bookingCollection.findOne(query);
+            res.send(booking);
         })
 
         app.get('/available', async (req, res) => {
