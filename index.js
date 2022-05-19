@@ -73,6 +73,7 @@ async function run() {
         const bookingCollection = client.db('doctor_bhai').collection('booking');
         const usersCollection = client.db('doctor_bhai').collection('users');
         const doctorCollection = client.db('doctor_bhai').collection('doctors');
+        const paymentCollection = client.db('doctor_bhai').collection('payments');
 
 
         const verifyAdmin = async (req, res, next) => {
@@ -95,19 +96,19 @@ async function run() {
          * app.delete('/booking/:id') //one item delete on your DB
          */
         app.post("/create-payment-intent", async (req, res) => {
-            const service  = req.body;
+            const service = req.body;
             const price = service.price;
             const amount = price * 100;
             const paymentIntent = await stripe.paymentIntents.create({
-                amount : amount,
-                currency:'usd',
-                payment_method_types:['card']
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
             });
             res.send({
                 clientSecret: paymentIntent.client_secret
             })
         })
-        
+
         app.get('/service', async (req, res) => {
             const query = {};
             const cursor = await serviceCollection.find(query).project({ name: 1 });
@@ -194,6 +195,25 @@ async function run() {
             const result = await bookingCollection.insertOne(booking);
             // SendTestEmail(booking);
             return res.send({ success: true, result });
+        })
+
+        app.patch('/booking/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            //console.log(payment);
+            const updateDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+
+            /* send a email to client to send a confirmation mail */
+
+            const result = await paymentCollection.insertOne(payment);
+            const updatedBooking = await bookingCollection.updateOne(filter, updateDoc);
+            res.send(updatedBooking);
         })
 
         app.put('/user/:email', async (req, res) => {
