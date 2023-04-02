@@ -17,9 +17,9 @@ app.use(express.json());
 
 /* mongoDB  */
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hd4la.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+/* mongoDB connection */
+connectDB(); 
 
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next) {
 
