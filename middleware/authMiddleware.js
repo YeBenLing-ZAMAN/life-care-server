@@ -12,6 +12,7 @@ const authenticate = async (req, res, next) => {
 
     if (token && isCustomAuth) {
       decodedData = jwt.verifyToken(token);
+      console.log(decodedData);
       req.userId = decodedData?.id;
       req.role = decodedData?.role;
     } else {
