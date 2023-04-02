@@ -9,6 +9,7 @@ const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
+const connectDB = require("./DB/config");
 
 
 /* middleware */
