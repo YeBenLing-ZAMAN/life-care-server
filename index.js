@@ -9,6 +9,7 @@ const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
+const connectDB = require("./DB/config");
 
 
 /* middleware */
@@ -17,9 +18,9 @@ app.use(express.json());
 
 /* mongoDB  */
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hd4la.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+/* mongoDB connection */
+connectDB(); 
 
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next) {
 
