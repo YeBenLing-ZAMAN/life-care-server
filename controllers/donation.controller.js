@@ -1,4 +1,4 @@
-const sendTextMessage = require("../config/sendTextMessage.js");
+const sendTextMessage = require("../config/emailAndMessageSender/sendTextMessage.js");
 // const sendTextEmail = require("../config/sendTextEmail.js");
 const Donation = require("../models/DonationSchema.js");
 
