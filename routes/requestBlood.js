@@ -6,14 +6,15 @@ const {
 } = require("../controllers/bloodRequest.controller.js");
 
 /* JWT Authentication */
-const { authenticate } = require("../middleware/auth.js");
-// router.use(middleware);
+const { authenticate } = require("../middleware/authMiddleware.js");
+const middleware = [authenticate];
+router.use(middleware); // all routes get middleware
 /* ---------- */
 
 const router = express.Router();
 
-router.post("/", authenticate, addBloodRequest);
-router.get("/", authenticate, getRequests);
-router.put("/:requestId", authenticate, updateRequest);
+router.post("/", addBloodRequest);
+router.get("/", getRequests);
+router.put("/:requestId", updateRequest);
 
 module.exports = router;
