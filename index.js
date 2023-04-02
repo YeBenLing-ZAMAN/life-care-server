@@ -34,7 +34,6 @@ app.use('/user', userRoutes);
 app.use('/donors', donorsRoutes);
 app.use('/donation', donationRoutes);
 app.use('/request-blood', requestBloodRoutes);
-app.use('/consult', consultRoutes);
 app.use('/doctors', doctorRoutes);
 
 
