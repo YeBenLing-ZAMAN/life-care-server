@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const cors = require("cors");
-const port = process.env.PORT || 5050;
+const port = process.env.PORT || 5000;
 const connectDB = require("./DB/Config");
 
 /* get all routers */
@@ -30,7 +30,7 @@ app.use(express.json());
 connectDB();
 
 /* link router  */
-app.use('/user', userRoutes);
+app.use('/users/api/', userRoutes);
 app.use('/donors', donorsRoutes);
 app.use('/donation', donationRoutes);
 app.use('/request-blood', requestBloodRoutes);
