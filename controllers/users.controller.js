@@ -3,6 +3,78 @@ const User = require("../models/UserSchema");
 
 const jwt = new JWT(process.env.JWT_SECRET_KEY || "JWT_SECRET_KEY");
 
+// check email number
+const checkEmail = async (req, res) => {
+  try {
+    const email = req.params.email;
+    if (!email) {
+      res.status(400).json({
+        message: "Please fill email felid",
+      });
+    } else {
+      const user = await User.findOne({ email: email });
+      if (user) {
+        res.status(400).json({
+          message: "Email taken",
+        });
+      } else {
+        res.status(200).json({
+          message: "Available email",
+        });
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      message: error.toString(),
+    });
+  }
+};
+
+const signup = async (req, res) => {
+  const { name, email, password, confirmPassword, lastDonationDate, role } = req.body;
+
+  try {
+    let userRole = ["donor"];
+    let eligibility = "eligible";
+
+    if (role === "doctor") userRole.push("doctor");
+
+    if (lastDonationDate) {
+      const donationBefore =
+        new Date().getTime() - Date.parse(lastDonationDate);
+      const fourMonth = 4 * 30 * 24 * 60 * 60 * 1000;
+      eligibility = donationBefore >= fourMonth ? "eligible" : "not eligible";
+    }
+
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser?.email)
+      return res.json({ message: "User already exists! Please login now" });
+    const result = await User.create({
+      name,
+      email,
+      password: password,
+      role: userRole,
+      eligibility,
+    });
+
+    const token = jwt.generateJWTToken(
+      { email: result.email, id: result._id, role: result.role },
+      "1h"
+    );
+
+    // res.status(200).json({ user: result, token });
+    res.status(200).json({
+      message: "Registration Successful",
+      token: token,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ message: error.message || "Something went wrong!" });
+  }
+};
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -29,49 +101,39 @@ const login = async (req, res) => {
       "1h"
     );
 
-    res.status(200).json({ user: existingUser, token });
+    // res.status(200).json({ user: existingUser, token });
+    res.status(200).json({
+      message: "Login successfull",
+      token: token,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something went wrong!" });
   }
 };
 
-const signup = async (req, res) => {
-  const { email, password, confirmPassword, lastDonationDate, role } = req.body;
-
+const getUserInfo = async (req, res) => {
   try {
-    let userRole = ["donor"];
-    let eligibility = "eligible";
+    // const userId = req.params.user_id;
+    let userId = req.userId;
+    console.log(userId);
 
-    if (role === "doctor") userRole.push("doctor");
+    const user = await User.findOne({ _id: userId }).select(["-password"]);
+    // const {password, ...userInfo} = user._doc;
 
-    if (lastDonationDate) {
-      const donationBefore =
-        new Date().getTime() - Date.parse(lastDonationDate);
-      const fourMonth = 4 * 30 * 24 * 60 * 60 * 1000;
-      eligibility = donationBefore >= fourMonth ? "eligible" : "not eligible";
+    if (user) {
+      res.status(200).json({
+        data: user,
+      });
+    } else {
+      res.status(404).json({
+        message: "Invalid user ID",
+      });
     }
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser?.email)
-      return res.json({ message: "User already exists! Please login now" });
-    const result = await User.create({
-      email,
-      password: password,
-      role: userRole,
-      eligibility,
-    });
-
-    const token = jwt.generateJWTToken(
-      { email: result.email, id: result._id, role: result.role },
-      "1h"
-    );
-
-    res.status(200).json({ user: result, token });
   } catch (error) {
-    console.log(error);
-    res.json({ message: error.message || "Something went wrong!" });
+    res.status(400).json({
+      message: error.toString(),
+    });
   }
 };
 
@@ -120,8 +182,10 @@ const updateProfile = async (req, res) => {
 };
 
 module.exports = {
+  checkEmail,
   updateProfile,
   getUser,
   signup,
   login,
+  getUserInfo,
 };

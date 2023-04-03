@@ -1,7 +1,7 @@
 const emailRegex = /\S+@\S+\.\S+/;
 
 const signupValidator = async (req, res, next) => {
-  const { email, password, confirmPassword } = req.body;
+  const { email, password, confirm_password } = req.body;
 
   if (!email) return res.json({ message: "Email is required!" });
 
@@ -13,7 +13,7 @@ const signupValidator = async (req, res, next) => {
   if (!(password?.length >= 6))
     return res.json({ message: "Do you tell that a password?" });
 
-  if (password !== confirmPassword)
+  if (password !== confirm_password)
     return res.json({ message: "Passwords don't match!" });
 
   next();
