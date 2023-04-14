@@ -1,5 +1,6 @@
 const { BCrypt, JWT } = require("jwt-auth-helper");
 const User = require("../models/UserSchema");
+const Cloudinary = require("../config/imageUpload/cloudinary");
 
 const jwt = new JWT(process.env.JWT_SECRET_KEY || "JWT_SECRET_KEY");
 
@@ -32,13 +33,14 @@ const checkEmail = async (req, res) => {
 };
 
 const signup = async (req, res) => {
-  const { name, email, password, confirmPassword, lastDonationDate, role } = req.body;
+  const { name, email, password, confirmPassword, lastDonationDate, role } =
+    req.body;
 
   try {
-    let userRole = ["donor"];
+    let userRole = "donor";
     let eligibility = "eligible";
 
-    if (role === "doctor") userRole.push("doctor");
+    if (role === "doctor") userRole = "doctor";
 
     if (lastDonationDate) {
       const donationBefore =
@@ -155,29 +157,68 @@ const getUser = async (req, res) => {
 const updateProfile = async (req, res) => {
   const profileInfo = req.body;
   const { userId } = req;
-
+  // console.log(userId);
   try {
+    /* security checking again */
     const existingUser = await User.findOne({
-      _id: profileInfo._id,
+      _id: userId,
       email: profileInfo.email,
     });
-    if (!existingUser)
+    if (!existingUser) {
       return res
         .status(400)
         .json({ message: "No user found for this profile!" });
+    }
 
-    if (existingUser._id != userId)
+    if (existingUser._id != userId) {
       return res.status(400).json({ message: "Unauthorized!" });
-
+    }
+    /* **************** */
     const result = await User.updateOne({ _id: userId }, profileInfo);
-
-    if (result.nModified > 0)
-      return res.status(200).json({ user: profileInfo });
-
-    res.json({ message: "Nothing's changed!" });
+    console.log(result);
+    if (result) {
+      return res.status(200).json({ message: "User information updated" });
+    } else {
+      res.status(400).json({
+        message: "Cannot update user information",
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something went wrong!" });
+  }
+};
+
+const updateProfilePic = async (req, res) => {
+  try {
+    const { userId } = req;
+    if (!req.file?.path)
+      res.status(400).json({
+        message: "Image is missing",
+      });
+    const findUser = await User.findById(userId);
+    if (findUser.avatar_public_url) {
+      await Cloudinary.uploader.destroy(findUser.avatar_public_url);
+    }
+    const image = await Cloudinary.uploader.upload(req.file.path);
+    const avatar = {
+      avatar: image.secure_url,
+      avatar_public_url: image.public_id,
+    };
+    const upImage = await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          avatar: avatar.avatar,
+          avatar_public_url: avatar.avatar_public_url,
+        },
+      }
+    );
+    // await upImage.save();
+    return res.status(200).json({ message: "Image uploaded" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -188,4 +229,5 @@ module.exports = {
   signup,
   login,
   getUserInfo,
+  updateProfilePic,
 };

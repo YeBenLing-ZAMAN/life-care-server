@@ -19,6 +19,7 @@ const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 /* cors error handle */
 const corsOptions = {
   origin: ["http://localhost:3000"],
+  origin: ["http://localhost:3001"],
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
@@ -40,6 +41,7 @@ app.use('/doctors', doctorRoutes);
 // base API
 app.get("/", (req, res) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Origin", "http://localhost:3001");
   res.send("Hello server is ready !");
 });
 

@@ -11,13 +11,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  role: [
-    {
-      type: String,
-      required: true,
-      default: "donor",
-    },
-  ],
+  role: { type: String, enum: ["donor", "doctor", "admin"], default: "donor" },
   // permissions: [{ name: String }],
   name: {
     type: String,
@@ -25,9 +19,10 @@ const userSchema = new mongoose.Schema({
   username: {
     type: String,
   },
-  profilePic: {
+  avatar_public_url: {
     type: String,
   },
+  avatar: { type: String },
   phoneNumber: {
     type: String,
   },
@@ -65,6 +60,10 @@ const userSchema = new mongoose.Schema({
   isVerifiedDoctor: {
     type: String,
     default: "Not Verified",
+  },
+  gender: {
+    type: String,
+    enum: ["male", "female"],
   },
 });
 // .plugin(permissions);

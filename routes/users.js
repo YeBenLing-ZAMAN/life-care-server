@@ -6,12 +6,14 @@ const {
   signup,
   updateProfile,
   getUserInfo,
+  updateProfilePic
 } = require("../controllers/users.controller.js");
 const { loginLimiter, signupLimiter } = require("../middleware/rateLimit.js");
 const { signupValidator } = require("../middleware/signupValidator.js");
 
 /* JWT Authentication */
 const { authenticate } = require("../middleware/authMiddleware.js");
+const multer = require("../middleware/multer.js");
 // const middleware = [authenticate]
 // router.use(middleware); // all routes get middleware
 /* ---------- */
@@ -23,6 +25,8 @@ router.post("/login", loginLimiter, login);
 router.post("/register", signupLimiter, signupValidator, signup);
 router.get("/get_user", authenticate, getUserInfo);
 router.get("/", authenticate, getUser);
-router.put("/", authenticate, updateProfile);
+router.put("/update_user_info", authenticate, updateProfile);
+router.put("/update_profile_pic",authenticate, multer.single("image"), updateProfilePic);
+
 
 module.exports = router;
