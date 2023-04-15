@@ -3,6 +3,8 @@ const {
   askDonation,
   getDonations,
   updateDonation,
+  getBloodRequestSendToDonor,
+  getBloodRequestReceivedFromRequester,
 } = require("../controllers/donation.controller.js");
 const { donationLimiter } = require("../middleware/rateLimit.js");
 
@@ -13,6 +15,8 @@ const { authenticate } = require("../middleware/authMiddleware.js");
 const router = express.Router();
 
 router.get("/", authenticate, getDonations);
+router.get("/getBloodRequestSendToDonor",authenticate,getBloodRequestSendToDonor);
+router.get("/getBloodRequestReceivedFromRequester",authenticate,getBloodRequestReceivedFromRequester);
 router.post("/", donationLimiter, authenticate, askDonation);
 router.put("/:donationId", authenticate, updateDonation);
 

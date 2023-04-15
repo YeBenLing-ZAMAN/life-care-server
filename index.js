@@ -33,7 +33,7 @@ connectDB();
 /* link router  */
 app.use('/users/api/', userRoutes);
 app.use('/donors', donorsRoutes);
-app.use('/donation', donationRoutes);
+app.use('/api/donation', donationRoutes);
 app.use('/request-blood', requestBloodRoutes);
 app.use('/doctors', doctorRoutes);
 

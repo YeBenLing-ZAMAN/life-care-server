@@ -25,9 +25,10 @@ const askDonation = async (req, res) => {
   }
 };
 
-const getDonations = async (req, res) => {
+/* const getDonations = async (req, res) => {
   const { userId, role } = req;
   console.log(req.query);
+  console.log(userId, role);
   try {
     const type = req.query.type;
     const limit = parseInt(req.query.limit);
@@ -71,6 +72,46 @@ const getDonations = async (req, res) => {
     console.log(error);
     res.json({ message: error.message || "something went wrong" });
   }
+}; */
+
+const getBloodRequestSendToDonor = async (req, res) => {
+  const { userId, role } = req;
+  console.log(userId, role);
+  try {
+    const filter = {};
+
+    if (!role.includes("admin")) {
+      filter["askedBy._id"] = userId;
+    }
+
+    const data = await Donation.find(filter);
+    const total = await Donation.countDocuments(filter);
+
+    res.status(200).json({ donations: data, total });
+  } catch (error) {
+    console.log(error);
+    res.json({ message: error.message || "something went wrong" });
+  }
+};
+
+const getBloodRequestReceivedFromRequester = async (req, res) => {
+  const { userId, role } = req;
+  console.log(userId, role);
+  try {
+    const filter = {};
+
+    if (!role.includes("admin")) {
+      filter["askedTo._id"] = userId;
+    }
+
+    const data = await Donation.find(filter);
+    const total = await Donation.countDocuments(filter);
+
+    res.status(200).json({ donations: data, total });
+  } catch (error) {
+    console.log(error);
+    res.json({ message: error.message || "something went wrong" });
+  }
 };
 
 const updateDonation = async (req, res) => {
@@ -84,13 +125,14 @@ const updateDonation = async (req, res) => {
       { _id: donationId },
       { status: donationInfo.status }
     );
-
-    if (data.nModified) return res.status(200).json(donationInfo);
-
-    return res.json({ message: "Nothing's Changed" });
+    if (data) {
+      return res.status(200).json({ message: "status updated" });
+    } else {
+      return res.json({ message: "somethings wrong's! try later." });
+    }
   } catch (error) {
-    console.log(error);
-    res.json({ message: error.message || "something went wrong" });
+    // console.log(error);
+    res.json({ message: error.message });
   }
 };
 
@@ -98,4 +140,6 @@ module.exports = {
   askDonation,
   getDonations,
   updateDonation,
+  getBloodRequestSendToDonor,
+  getBloodRequestReceivedFromRequester,
 };
